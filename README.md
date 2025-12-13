@@ -383,6 +383,21 @@ script:
 
     - helm upgrade go-web-app ./go-web-app-chart --set image.tag=$CI_COMMIT_SHA
 
+
+## Commands to verify before pipeline is triggered:
+-----------------------------------------------------------
+
+    // -v "$PWD:/app" --> This mounts your current project directory into the container
+    // -w /app --> Sets the working directory inside container
+    // --rm --> Deletes the container after run
+
+    // running this ensures tests are running fine here, so it runs in CI also
+    - docker run --rm -v "$PWD:/app" -w /app golang:1.22 go test ./...
+        output: ok   github.com/your/app  0.234s
+
+    - docker run --rm -v "$PWD:/app" -w /app golangci/golangci-lint:v1.56.2 golangci-lint run
+        output : empty
+
 ## Continuous Delivery:
 ------------------------------------
 //GitOps
