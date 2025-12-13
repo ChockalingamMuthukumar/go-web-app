@@ -16,7 +16,7 @@ variables:
 
 lint:
   image:
-    name: golang:1.25
+    name: golang:1.22
     entrypoint: [""]
   stage: static_code_analysis
   script:
@@ -32,7 +32,7 @@ lint:
       - gl-code-quality-report.json
 
 build_code:
-  image: golang:1.25
+  image: golang:1.22
   stage: build
   script:
     - echo "building the code"
@@ -48,7 +48,7 @@ build_code:
       - go-web-app-artifacts
 
 test_code:
-  image: golang:1.25
+  image: golang:1.22
   stage: test
   cache:
     key: go-mod

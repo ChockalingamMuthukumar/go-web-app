@@ -1,3 +1,3 @@
 module github.com/iam-veeramalla/go-web-app
 
-go 1.25
+go 1.22
