@@ -16,7 +16,7 @@ spec:
         app: go-web-app-pods
     spec:
       containers:
-      - image: docker.io/chockalingammuthukumar/go-web-app:latest
+      - image: chockalingammuthukumar/go-web-app:latest
         name: go-web-app-containers
         ports:
           - containerPort: 8080

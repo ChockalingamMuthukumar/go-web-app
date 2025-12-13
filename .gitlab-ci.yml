@@ -10,7 +10,7 @@ stages:
   - helm_upgrade
 
 variables:
-  IMAGE_NAME: docker.io/chockalingammuthukumar/go-web-app
+  IMAGE_NAME: chockalingammuthukumar/go-web-app
   DOCKER_TLS_CERTDIR: ""
   GOLANGCI_LINT_VERSION: 'v1.56.2'
 
@@ -76,7 +76,7 @@ build_push_docker_image:
     - docker push $IMAGE_NAME:latest
 
 upgrade_deployment:
-  image: alpine/helm:3.14
+  image: alpine/helm:4
   stage: helm_upgrade
   script:
     - helm upgrade --install go-web-app ./go-web-app-chart \
