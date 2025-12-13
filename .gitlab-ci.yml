@@ -87,10 +87,11 @@ update-image-tag:
     - git config --global user.name "ChockalingamMuthukumar"
 
     # Update image.tag in values.yaml
-    - yq -i '.image.tag = strenv(CI_COMMIT_SHA)' go-web-app-chart/values.yaml
+    - yq -i '.image.tag = strenv(CI_COMMIT_SHA)' ./Helm/go-web-app-chart/values.yaml
 
     # Commit & push
-    - git add go-web-app-chart/values.yaml
+    - git remote add gitlab https://gitlab.com/chockalingammuthukumar-group/go-web-app-project.git
+    - git add .
     - git commit -m "chore update image tag to $CI_COMMIT_SHA"
     - git push -u gitlab main
 

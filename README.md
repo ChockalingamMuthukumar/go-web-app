@@ -409,3 +409,8 @@ script:
 Purpose: Argo-CD watches helm chart, whenever values.yaml is updated, pulls the helm chart , installs it on k8s cluster, if helm chart is already there, it just updates the helm chart in kubernetes cluster
 
 ArgoCD --> pulls the helm chart from CI and deploy into kubernetes cluster
+
+## Useful commands:
+-----------------------------
+
+// ls -R --> to find the folder structure of the project
