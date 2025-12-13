@@ -1,0 +1,84 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+stages:
+  - static_code_analysis
+  - build
+  - test
+  - build_push_image
+  - helm_upgrade
+
+variables:
+  IMAGE_NAME: docker.io/chockalingammuthukumar/go-web-app
+  DOCKER_TLS_CERTDIR: ""
+  GOLANGCI_LINT_VERSION: 'v1.56.2'
+
+lint:
+  image: golangci/golangci-lint:$GOLANGCI_LINT_VERSION
+  stage: static_code_analysis
+  script:
+    # Write the code coverage report to gl-code-quality-report.json
+    # and print linting issues to stdout in the format: path/to/file:line description
+    # remove `--issues-exit-code 0` or set to non-zero to fail the job if linting issues are detected
+    - golangci-lint run --print-issued-lines=false --out-format code-climate:gl-code-quality-report.json,line-number
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    paths:
+      - gl-code-quality-report.json
+
+build_code:
+  image: golang:1.22
+  stage: build
+  script:
+    - echo "building the code"
+    - go version 
+    - go mod download
+    - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o go-web-app-artifacts
+  cache:
+    key: go-mod
+    paths:
+      - /go/pkg/mod
+  artifacts:
+    paths:
+      - go-web-app-artifacts
+
+test_code:
+  image: golang:1.22
+  stage: test
+  cache:
+    key: go-mod
+    paths:
+      - /go/pkg/mod
+  script:
+    - echo "testing the code"
+    - go install github.com/jstemmer/go-junit-report/v2@latest
+    - go test ./... -v -count=1 | go-junit-report > report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+
+build_push_docker_image:
+  image: docker:24
+  stage: build_push_image
+  services:
+    - docker:24-dind
+  script:
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHA .
+    - docker tag $IMAGE_NAME:$CI_COMMIT_SHA $IMAGE_NAME:latest
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker push $IMAGE_NAME:$CI_COMMIT_SHA
+    - docker push $IMAGE_NAME:latest
+
+upgrade_deployment:
+  image: alpine/helm:3.14
+  stage: helm_upgrade
+  script:
+    - helm upgrade --install go-web-app ./go-web-app-chart \
+        --set image.repository=$IMAGE_NAME \
+        --set image.tag=$CI_COMMIT_SHA
+
+    
+

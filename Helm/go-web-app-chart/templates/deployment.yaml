@@ -16,7 +16,7 @@ spec:
         app: go-web-app-pods
     spec:
       containers:
-      - image: docker.io/chockalingammuthukumar/go-web-app:{{ .Values.image.tag }}
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         name: go-web-app-containers
         ports:
           - containerPort: 8080

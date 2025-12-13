@@ -264,6 +264,10 @@ Helm Verification:
 
 //branch 'main' set up to track 'gitlab/main'
 
+// Now we can push from local repo to two remote repo and -u is upstream
+    1. git push -u origin main --> push to github repo
+    2. git push -u gitlab main --> push to gitlab repo
+
 ## Continuous Integration:
 -----------------------------------
 //Github Actions
@@ -278,8 +282,106 @@ Jobs:
 
 Process:
     1. Create .github folder, under that workflows folder, under that ci.yaml file
-    2. 
+    
+## GitLab
+---------------------------
+workflows:
+  rules:
+    // pipeline rules, where pipeline will run only if commits are made in default branch(main)
+    // commit branch --> branch where the commit will be made
+    // default branch --> which is set to default value of main already
+    // when this conditon becomes equal the pipeline runs
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
+Stage0: static_code_analysis
+Job0: lint
+output: code quality report in json format
+
+Stage1: build
+Job1: build_code
+output: artifacts
+script:
+
+    // Build my Go app so it runs safely inside a Linux Docker container
+    // CGO_ENABLED=0 --> if not enabled, disables C bindings, keeps it fully static binary
+    // GOOS=linux    --> making it linux specific
+    // GOARCH=amd64  --> amd64 CPU architecture
+
+    - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o go-web-app-artifacts
+
+
+Stage2: test
+Job2: test-code
+output: junit report in xml format
+script:
+    - echo "testing the code"
+    // install go-junit-report dependency
+    - go install github.com/jstemmer/go-junit-report/v2@latest
+    // go-junit-report converst the etxt format code to xml format in the way gitlab can store
+    // count=1 --> disables test caching, ensures fresh test runs in CI
+    - go test ./... -v -count=1 | go-junit-report > report.xml
+
+Stage3: build_image
+Job3: build_docker_image
+output: new build tagged docker image
+
+build_docker_image:
+  image: docker:24
+  stage: build_image
+  services:
+    // To run docker build and docker tag commands insid conatiner, we need Docker CLI and docker daemon running
+    // dind --> docker in docker
+
+    // if no dind, then "cannot connect to docker daemon"
+    - docker:24-dind
+
+    // download the artifacts from build_code
+    dependencies:
+        - build_code
+
+    script:
+    // create image_name variable with docker image link as value
+
+    // build the image with CI COMMIT SHA which create a new commit for new image built with random number, maintains a commit history of previous tag versions, so when deployment rollback is needed then helm rollback to previously tagged images
+
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHA .
+
+    // tag the above image as latest
+    - docker tag $IMAGE_NAME:$CI_COMMIT_SHA $IMAGE_NAME:latest
+
+Stage4: push_image
+Job4: push_docker_image
+output: push the latest docker image to docker repo
+script:
+    // create a PAT with retention policy in Docker
+    // Settings--> CI?CD --> variables --> Add docker username(masked) and docker password(PAT, masked and hidden)
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+
+    (OR) use more safer option,
+    - echo "DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+    // push both versions of image to docker hub registry
+    // CI_COMMIT_SHA --> exact version control
+    // latest --> easy dev usage
+    - docker push $IMAGE_NAME:$CI_COMMIT_SHA
+    - docker push $IMAGE_NAME:latest
+
+Stage5: helm_upgrade
+Job5: upgrade_deployment
+output: upgrade exisitng deployment.yaml chart with latest build image
+script:
+    // upgrade go-web-app-chart deployment.yaml file with latest image tag
+    // Helm updates Deployment using "--set image.tag=$CI_COMMIT_SHA"
+    // Kubernetes sees new image tag
+    // Kubernetes pulls the image --> kubernetes tells to CRI, then container runtime pulls the image from docker hub registry
+    // Node
+        ├─ kubelet
+        ├─ container runtime (containerd / CRI-O)
+        ├─ /var/lib/containerd
+        └─ Pulled images stored here
+    // Pods restart automatically
+
+    - helm upgrade go-web-app ./go-web-app-chart --set image.tag=$CI_COMMIT_SHA
 
 ## Continuous Delivery:
 ------------------------------------
