@@ -28,7 +28,7 @@ lint:
 
 
 build_code:
-  image: golang:1.22
+  image: golang:1.25
   stage: build
   script:
     - echo "building the code"
@@ -44,7 +44,7 @@ build_code:
       - go-web-app-artifacts
 
 test_code:
-  image: golang:1.22
+  image: golang:1.25
   stage: test
   cache:
     key: go-mod
