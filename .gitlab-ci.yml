@@ -92,7 +92,7 @@ update-image-tag:
     # Commit & push
     - git add .
     - git commit -m "chore update image tag to $CI_COMMIT_SHA"
-    - git push -u origin main
+    - git push origin HEAD:main
 
     
 
