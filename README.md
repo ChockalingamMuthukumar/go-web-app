@@ -16,12 +16,23 @@ The server will start on port 8080. You can access it by navigating to `http://l
 
 ![Website](static/images/golang-website.png)
 
-## go.mod
+## Resources Used:
+---------------------------------
+1. Containerizing -- Docker
+2. Minikube       -- Kubernetes
+3. EKS,IAM user   -- AWS
+4. Ingress        -- Kubernetes
+5. Helm           -- Kubernetes
+6. CI             -- Github Actions
 
+## go.mod
+------------------------
 // dependencies file for go applications
 // RUN go mod download -- to download dependencies
 
 ## DockerFile notes
+-----------------------------
+// Distroless image --> no shell, no package managers, no OS level attack surface, reduces image size, secure
 
 // Create a distroless image, copy the artifacts from previous build stage and place it in default directory(.) nothing but current directory or new directory
 
@@ -30,10 +41,9 @@ The server will start on port 8080. You can access it by navigating to `http://l
 // We need to copy static files also from previous stages, since this application has html files which are static content, we need to copy them into image because static content are not part of binaries
 
   // COPY --from=build /app/static ./static
----------------------------------------------------
 
 ## Docker commands
-
+--------------------------------
 // build the docker image with docker hub repo name, current build directory path(.)
 ## docker build -t chockalingammuthukumar/go-web-app .
 
@@ -52,18 +62,16 @@ The server will start on port 8080. You can access it by navigating to `http://l
 // push the docker image from local to docker hub repository
 ## docker push chockalingammuthukumar/go-web-app
 
-------------------------------------------
-
 ## Kubernetes
+------------------------------------------
 
 // Service Discovery --> happens through labels and selectors
 
-// Run below command to amke the deployment file created, copy paste into our file and edit
+// Run below command to make the deployment file created, copy paste into our file and edit
 ## kubectl create deployment go-web-app-deployment --replicas=2 --image=chockalingammuthukumar/go-web-app:latest --dry-run=client --output='yaml' > go-web-app-deployment.yaml
 
---------------------------------------
-
 ## Ingress
+--------------------------------------
 
 // Ingress class name is basically for the ingress resource to be identified by the ingress controller
 // Ingress class is used to control the ingress controllers
@@ -77,14 +85,12 @@ Two types of ingress objects:
 3. class --> manges and sends instructions to controllers
 
 // ingress class --> manages the respective ingress controllers
-// ingress controllers --> route the trafffic based on written ingress resources rules 
+// ingress controllers --> route the trafffic based on written ingress resources rules, runs as a pod inside ingress-nginx namespace after installation
 // ingress resources --> routing rules defined based on host based or path based routing
 
 Traffic flow:
 -------------------
 nginx ingress class --> nginx ingress controller --> nginx resources file
-
----------------------------
 
 ## AWS EKS
 
@@ -113,3 +119,172 @@ Prerequisites:
     "Account": "010438482687",
     "Arn": "arn:aws:iam::010438482687:user/chocka_eks_user"
 }
+
+
+## GIT
+-------------------------
+// remove the already existing origin
+## git remote remove origin 
+
+// add the new remote repo from github
+## git remote add origin https://github.com/ChockalingamMuthukumar/go-web-app.git
+
+// push the changes after adding and committing into remote repo
+## git push -u origin main 
+// git add .
+// git commit -m "commit-message" --> commits to local repo
+// git push --> push to remote repo from local repo
+// -u --> upstream
+// origin --> remote repo head
+// main --> local repo head (git branch)
+
+## Podman + CRI-O 
+----------------------------------------
+// dont use node port service in above combination as,
+// NodePort is unreliable in Podman machine because:
+    --> CRI-O doesn’t open host ports
+    --> VM networking is isolated
+    --> No system firewall to configure
+    --> No automatic interface binding
+
+## Kubernetes service object
+-------------------------------------
+// After creating service object, check two things,
+    1. kubectl get endpoints go-web-app-nodeport-service
+        --> to check whether the service points to the right pods behind that is selector name in service.yaml file matches with pod name labels
+    2. kubectl describe svc/<service-name>
+        --> to check the endpoints, it should not be empty, if empty then it is not having right selector labels
+
+## Port Forwarding
+------------------------
+// Exposing a service from its service port(mostly 80) on to our local host port --> http://localhost:<localhost-port>
+
+// kubectl port-forward svc/go-web-app-nodeport-service 9999:80 
+    --> mapping local host port 9999 to service port of node port that is 80(mentioned in YAML file)
+    local host port: 9999
+    service port: 80
+
+## ingress-nginx namespace
+-----------------------------------
+Nginx Ingress Controller YAML --> has nginx ingress class name
+Ingress Resource object YAML --> has nginx ingress class name
+
+// kubectl apply -f kubernetes/manifests/ingress.yaml -n ingress-nginx
+// kubectl get pods -n ingress-nginx
+// kubectl edit pod <pod-name> -n ingress-nginx
+// kubectl get all,ingress -n ingress-nginx --> get all resources and ingress resource inside ingress-nginx namespace
+
+## /etc/hosts
+---------------------------
+// sudo vim /etc/hosts
+// Press i for insert mode
+// edit the file by adding entry: 
+     127.0.0.1  go-web-app.local
+// to save --> :wq
+    w --> write/save
+    q --> quit
+
+## Traffic flow
+----------------------------------
+
+// Address shown by "kubectl get ing" should be mapped to host name given in ing YAML file, then only when we hit in browser DNS resolving happens and routing is done based on routing rules
+
+// Failed flow:
+    // "kubectl get ing" shows address as minikube-ip(192.168.49.2)
+    // macos from localhost can't reach minikube-ip as it is inside podman private network
+    // when mapped minikube-ip(192.168.49.2) to go-web-app.local in /etc/hosts --> macos localhost couldn't reach minikube-ip, so failed
+    // so map go-web-app.local to reachable address(127.0.0.1) for macos inside /etc/hosts
+    // once done, expose ingress controller service by port forward to the localhost port 9999
+    // when go-web-app.local is hit in browser it is resolved to 127.0.0.1 by macos, then request flows to ingress controller when we add go-web-app.local/9999 as it is exposed in port 9999, then to backend service based on routing rules inside ing object, then to pods under that backend service
+
+// go-web-app.local --> resolved to 127.0.0.1 --> ingress controller exposed to local host port 9999 by port-forward --> ingress controller watches ingress object rules --> routes the traffic to backend service --> then to pods
+
+// kubectl port-forward svc/ingress-nginx-controller 9999:80 -n ingress-nginx
+
+// http://go-web-app.local:9999/courses
+
+## HELM
+-----------------------------
+Purpose: 
+// to deploy the applcation in different environments like     Dev, QA, Prod
+// say different environments use different image tags like dev for development, prod for production, then using helm it can be variabilised as paramter depending on environments
+// Pass the tag name as variable using helm
+
+// "helm version"
+// create Helm folder
+// "cd Helm"
+// "helm create go-web-app-chart"
+
+Helm Components:
+-----------------------
+chart.yaml --> provides chart metadata
+templates --> remove this folder content initially, copy and paste our 3 manifests files into this folder
+deployment.yaml --> Use "image: docker.io/chockalingammuthukumar/go-web-app:{{ .Values.image.tag }}"
+    // Helm whenever executed look for tag from values.yaml file
+    // Update the following in values.yaml as of now, tag will be overided through ci/cd pipelines triggers
+    // image: repository: docker.io/chockalingammuthukumar/go-web-app
+       tag: "latest"
+
+Helm Verification:
+----------------------------
+1. Delete created deployment, service, ingress object for go-web-app as helm is  used to do all these now
+    // kubectl get all
+    // kubectl delete deployment/go-web-app-deployment
+    // kubectl delete svc/go-web-app-service 
+    // kubectl delete ing go-web-app-ingress
+2. helm install [NAME] [CHART-PATH] [flags]
+    // helm install go-web-app ./go-web-app-chart
+    // Now all deleted resources are created using helm
+    // when we ran above helm install command it created deployment by going into deployment.yaml and looked for image where we have mentioned {{ .Values.image.tag }} which internally looked for value of image.tag in values.yaml, taken the value "latest" from there and created the deployment
+    // Verify using "kubectl describe deployment/go-web-app-deployment" and observe the image used and its tag
+          Containers:
+            go-web-app-containers:
+                Image: docker.io/chockalingammuthukumar/go-web-app:latest
+3. helm uninstall go-web-app
+4. kubectl get all
+
+## Configure gitlab with github repo code:
+--------------------------------------------------
+
+// Create a new project under a group in gitlab
+
+//Check the remote available in our current setup
+    git remote -v
+
+// Add a new remote by copying gitlab project url
+    git remote add gitlab https://gitlab.com/chockalingammuthukumar-group/go-web-app-project.git
+
+// Again check the newly added remote using
+    git remote -v
+
+// Push the code from local repo to gitlab project repo
+    git push -u gitlab main
+    // gitlab --> new remote repo name added
+    // main --> local repo name
+
+//branch 'main' set up to track 'gitlab/main'
+
+## Continuous Integration:
+-----------------------------------
+//Github Actions
+
+Purpose: For every developer commit, build the code, unit test the code, do static code analysis, build the docker image, push it to the docker hub registry with newer version, create helm chart(if not present) or if present update the helm charts with new docker image version from values.yaml
+
+Jobs:
+    1. Build and Unit test
+    2. Static code analysis
+    3. Create and push docker image
+    4. Update helm chart with docker image created
+
+Process:
+    1. Create .github folder, under that workflows folder, under that ci.yaml file
+    2. 
+
+
+## Continuous Delivery:
+------------------------------------
+//GitOps
+
+Purpose: Argo-CD watches helm chart, whenever values.yaml is updated, pulls the helm chart , installs it on k8s cluster, if helm chart is already there, it just updates the helm chart in kubernetes cluster
+
+ArgoCD --> pulls the helm chart from CI and deploy into kubernetes cluster

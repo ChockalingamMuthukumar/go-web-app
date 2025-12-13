@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: go-web-app-deployment
+  name: go-web-app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-web-app-pods
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: go-web-app-pods
+    spec:
+      containers:
+      - image: docker.io/chockalingammuthukumar/go-web-app:{{ .Values.image.tag }}
+        name: go-web-app-containers
+        ports:
+          - containerPort: 8080
+        resources: {}
+status: {}

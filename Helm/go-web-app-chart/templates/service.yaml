@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: go-web-app-service
+  name: go-web-app-service
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: go-web-app-pods
+  type: ClusterIP
+status:
+  loadBalancer: {}
