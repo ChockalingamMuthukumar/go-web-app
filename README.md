@@ -398,6 +398,10 @@ script:
     - docker run --rm -v "$PWD:/app" -w /app golangci/golangci-lint:v1.56.2 golangci-lint run
         output : empty
 
+## GIT Config
+---------------------
+// git config --list --> to get usrname and email details
+
 ## Continuous Delivery:
 ------------------------------------
 //GitOps
