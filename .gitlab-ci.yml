@@ -81,9 +81,7 @@ upgrade_deployment:
     entrypoint: [""]
   stage: helm_upgrade
   script:
-    - helm upgrade --install go-web-app ./go-web-app-chart \
-        --set image.repository=$IMAGE_NAME \
-        --set image.tag=$CI_COMMIT_SHA
+    - helm upgrade --install go-web-app ./go-web-app-chart --set image.repository=$IMAGE_NAME --set image.tag=$CI_COMMIT_SHA
 
     
 
