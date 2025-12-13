@@ -15,11 +15,15 @@ variables:
   GOLANGCI_LINT_VERSION: 'v1.56.2'
 
 lint:
-  image: golang:1.25
+  image:
+    name: golang:1.25
+    entrypoint: [""]
   stage: static_code_analysis
   script:
-    - echo "Running golangci-lint"
-    - golangci-lint run --out-format code-climate > gl-code-quality-report.json
+      - echo "Go version check"
+      - go version
+      - unset GOTOOLCHAIN
+      - golangci-lint run --out-format code-climate > gl-code-quality-report.json
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
