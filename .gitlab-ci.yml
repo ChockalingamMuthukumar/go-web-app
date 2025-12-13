@@ -16,20 +16,20 @@ variables:
 
 lint:
   image:
-    name: golangci/golangci-lint:v1.56.2
+    name: golang:1.25
     entrypoint: [""]
   stage: static_code_analysis
   script:
-      - echo "Go version check"
-      - go version
-      - unset GOTOOLCHAIN
+      - echo "Installing golangci-lint"
+      - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.56.2
+      - export PATH=$PATH:$(go env GOPATH)/bin
+      - echo "Running golangci-lint"
       - golangci-lint run --out-format code-climate > gl-code-quality-report.json
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
     paths:
       - gl-code-quality-report.json
-
 
 build_code:
   image: golang:1.25
