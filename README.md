@@ -138,6 +138,12 @@ Prerequisites:
 // origin --> remote repo head
 // main --> local repo head (git branch)
 
+## Podman Commands:
+------------------------------
+
+// podman machine init --> new VM
+// podman machine start --> start the VM
+
 ## Podman + CRI-O 
 ----------------------------------------
 // dont use node port service in above combination as,
@@ -426,6 +432,24 @@ script:
 Purpose: Argo-CD watches helm chart, whenever values.yaml is updated, pulls the helm chart , installs it on k8s cluster, if helm chart is already there, it just updates the helm chart in kubernetes cluster
 
 ArgoCD --> pulls the helm chart from CI and deploy into kubernetes cluster
+
+ArgoCD Installation:
+----------------------------------
+
+// kubectl create namespace argocd
+// kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+// kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+
+// kubectl get svc argocd-server -n argocd --> load balancer service ip
+
+// kubectl port-forward service/argocd-server 8000:80 -n argocd
+
+// username -- admin
+// password -- kubectl get secrets -n argocd
+            -- kubectl edit secret argocd-initial-admin-secret -n argocd --> copy base64 encoded password from here
+            -- echo VVQwa2Vmc3JxUFJuc3ZWdA== | base64 --decode
+            -- Copy till before %
+
 
 ## Useful commands:
 -----------------------------
