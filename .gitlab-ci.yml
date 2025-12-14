@@ -92,6 +92,7 @@ update-image-tag:
     # Commit & push
     - git add .
     - git commit -m "chore update image tag to $CI_COMMIT_SHA"
+    - git remote set-url origin https://oauth2:$CI_PIPELINE_TOKEN@gitlab.com/chockalingammuthukumar-group/go-web-app-project.git
     - git push origin HEAD:main
 
     

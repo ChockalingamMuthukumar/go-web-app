@@ -366,10 +366,27 @@ script:
     - docker push $IMAGE_NAME:$CI_COMMIT_SHA
     - docker push $IMAGE_NAME:latest
 
-Stage5: helm_upgrade
-Job5: upgrade_deployment
-output: upgrade exisitng deployment.yaml chart with latest build image
+Stage5: update_image_tags
+Job5: update-image-tag:
+output: update the tag in values.yaml file and commit the changes into repository, as these changes happen inside a docker executor container , so it need to be committed into repository values.yaml file to reflect after container cleans up
 script:
+    # git → needed to commit & push
+    # yq → safe YAML editor
+    # --no-cache -->Keeps image small
+    - apk add --no-cache git yq
+    - git config --global user.email "92530847+ChockalingamMuthukumar@users.noreply.github.com"
+    - git config --global user.name "ChockalingamMuthukumar"
+
+    # Update image.tag in values.yaml
+    - yq -i '.image.tag = strenv(CI_COMMIT_SHA)' ./Helm/go-web-app-chart/values.yaml
+
+    # Commit & push
+    - git add .
+    - git commit -m "chore update image tag to $CI_COMMIT_SHA"
+    - git push origin HEAD:main
+
+
+
     // upgrade go-web-app-chart deployment.yaml file with latest image tag
     // Helm updates Deployment using "--set image.tag=$CI_COMMIT_SHA"
     // Kubernetes sees new image tag
@@ -381,7 +398,7 @@ script:
         └─ Pulled images stored here
     // Pods restart automatically
 
-    - helm upgrade go-web-app ./go-web-app-chart --set image.tag=$CI_COMMIT_SHA
+     // - helm upgrade go-web-app ./go-web-app-chart --set image.tag=$CI_COMMIT_SHA
 
 
 ## Commands to verify before pipeline is triggered:
