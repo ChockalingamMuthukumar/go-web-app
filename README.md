@@ -431,3 +431,8 @@ ArgoCD --> pulls the helm chart from CI and deploy into kubernetes cluster
 -----------------------------
 
 // ls -R --> to find the folder structure of the project
+
+## GITHUB Perosonal Access Token:
+--------------------------------------
+
+1. User Profile --> Settings --> Developer settings(from left pane) --> PAT
