@@ -436,3 +436,19 @@ ArgoCD --> pulls the helm chart from CI and deploy into kubernetes cluster
 --------------------------------------
 
 1. User Profile --> Settings --> Developer settings(from left pane) --> PAT
+
+
+## Errors encountered and FIxes:
+----------------------------------------
+
+1. Error: To https://gitlab.com/chockalingammuthukumar-group/go-web-app-project.git
+ ! [rejected]        main -> main (fetch first)
+    error: failed to push some refs to 'https://gitlab.com/chockalingammuthukumar-group/go-web-app-project.git'
+    hint: Updates were rejected because the remote contains work that you do not
+    hint: have locally. This is usually caused by another repository pushing to
+    hint: the same ref. If you want to integrate the remote changes, use
+    hint: 'git pull' before pushing again.
+    hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+   
+    Fix: git pull gitlab main --rebase
+         git push gitlab main
