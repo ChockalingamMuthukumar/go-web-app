@@ -476,3 +476,32 @@ ArgoCD Installation:
    
     Fix: git pull gitlab main --rebase
          git push gitlab main
+
+
+Deleted jobs:
+---------------------------
+
+update-image-tag:
+  image: alpine:3.20
+  stage: update_image_tags
+  script:
+    # git → needed to commit & push
+    # yq → safe YAML editor
+    # --no-cache -->Keeps image small
+    - apk add --no-cache git yq
+    - git config --global user.email "92530847+ChockalingamMuthukumar@users.noreply.github.com"
+    - git config --global user.name "ChockalingamMuthukumar"
+
+    # Update image.tag in values.yaml
+    - yq -i '.image.tag = strenv(CI_COMMIT_SHA)' ./Helm/go-web-app-chart/values.yaml
+
+    # Commit & push
+    - git remote add github https://$GITHUB_TOKEN@github.com/ChockalingamMuthukumar/go-web-app.git
+    - git remote -v
+    - git add .
+    - git commit -m "chore update image tag to $CI_COMMIT_SHA"
+    - git pull github main --rebase
+    - git push github HEAD:main
+
+    
+

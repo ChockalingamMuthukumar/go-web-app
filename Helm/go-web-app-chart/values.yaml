@@ -8,9 +8,9 @@ replicaCount: 1
 image:
   repository: docker.io/chockalingammuthukumar/go-web-app
   # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
+  pullPolicy: always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "a0f1baedae09da7c137c2c93f5661f1f92604545"
+  tag: "latest"
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 # This is to override the chart name.
