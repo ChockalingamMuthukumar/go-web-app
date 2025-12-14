@@ -92,10 +92,9 @@ update-image-tag:
     # Commit & push
     - git remote add github https://$GITHUB_TOKEN@github.com/ChockalingamMuthukumar/go-web-app.git
     - git remote -v
-    - git pull github main --rebase
     - git add .
     - git commit -m "chore update image tag to $CI_COMMIT_SHA"
-    #- git remote set-url origin https://oauth2:$CI_PIPELINE_TOKEN@gitlab.com/chockalingammuthukumar-group/go-web-app-project.git
+    - git pull github main --rebase
     - git push github HEAD:main
 
     
